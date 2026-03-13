@@ -4,7 +4,7 @@ from typing import Callable, Awaitable
 from osint.core import OsintResult
 
 # Map of agent_type -> (run_function, ai_cli)
-AGENT_REGISTRY: dict[str, tuple[Callable[[str], Awaitable[OsintResult]], str]] = {
+AGENT_REGISTRY: dict[str, tuple[Callable[..., Awaitable[OsintResult]], str]] = {
     "email":    (email.run,    "gemini"),
     "domain":   (domain.run,   "gemini"),
     "phone":    (phone.run,    "claude"),

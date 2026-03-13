@@ -57,7 +57,10 @@ class AIRunner:
             else:
                 stdout, stderr = await process.communicate()
         except asyncio.TimeoutError:
-            process.kill()
+            try:
+                process.kill()
+            except ProcessLookupError:
+                pass  # process already exited before we could kill it
             await process.communicate()  # reap zombie — must not be omitted
             raise AgentError(f"TIMEOUT after {timeout}s")
 

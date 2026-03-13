@@ -45,7 +45,7 @@ class OSINTOrchestrator:
             console=shared_console,
         )
 
-        if context is not None:
+        if context is not None and context.progress is None:
             context.progress = progress
 
         with Live(progress, console=shared_console, refresh_per_second=4):

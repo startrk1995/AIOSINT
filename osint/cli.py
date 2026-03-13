@@ -76,7 +76,7 @@ def _run_agent(agent_type: str, target: str, verbose: bool = False) -> None:
             progress.stop_task(tid)
         # Live has exited — safe to print
         # Timing key uses agent_type and target, same format as base.py writes
-        rich_formatter.format_result(result, elapsed=context._timings.get(f"{agent_type}:{target}"))
+        rich_formatter.format_result(result, console=shared_console, elapsed=context._timings.get(f"{agent_type}:{target}"))
     except Exception as e:
         console.print(f"[red]Error: {e}[/red]", err=True)
         raise typer.Exit(code=1)

@@ -7,7 +7,30 @@
       "Bash(python -m pip install -e . --quiet 2>&1 | head -20)",
       "Bash(python3 -m pip install -e . --quiet 2>&1 | head -30)",
       "Bash(which pip3:*)",
-      "Bash(git add:*)"
+      "Bash(git add:*)",
+      "Bash(find /home/nateg/AI/Projects/OSINT -name \"__init__.py\" -type f -exec wc -l {} + | tail -1)",
+      "Bash(git diff:*)",
+      "Bash(python -c \"from osint.core.result import OsintResult, PivotEntity; from osint.core.ai_runner import AIRunner; from osint.core.prompt_builder import PromptBuilder; from osint.config import settings; print\\('OK'\\)\")",
+      "Bash(python3 -c \"from osint.core.result import OsintResult, PivotEntity; from osint.core.ai_runner import AIRunner; from osint.core.prompt_builder import PromptBuilder; from osint.config import settings; print\\('OK'\\)\")",
+      "Bash(pip3 install:*)",
+      "Bash(noglob pip:*)",
+      "Bash(bash -c \"pip install -e /home/nateg/AI/Projects/OSINT -q 2>&1 | tail -10\")",
+      "Bash(python3 -m pip install -e /home/nateg/AI/Projects/OSINT -q 2>&1 | tail -10)",
+      "Bash(python3 -c \"import sys; print\\(sys.path\\); import site; print\\(site.getsitepackages\\(\\)\\)\")",
+      "Read(//home/nateg/.local/**)",
+      "Read(//home/nateg/**)",
+      "Read(//usr/bin/**)",
+      "Read(//usr/local/bin/**)",
+      "Bash(apt list:*)",
+      "Bash(sudo apt-get:*)",
+      "Bash(PYTHONPATH=/home/nateg/AI/Projects/OSINT python3 -c \"from osint.core.result import OsintResult, PivotEntity; from osint.core.ai_runner import AIRunner; from osint.core.prompt_builder import PromptBuilder; from osint.config import settings; print\\('OK'\\)\")",
+      "Bash(git commit:*)",
+      "Bash(git -C /home/nateg/AI/Projects/OSINT log --oneline -5)",
+      "Bash(python3 -c \"from osint.core.result import OsintResult, PivotEntity; from osint.core.ai_runner import AIRunner; from osint.core.prompt_builder import PromptBuilder, parse_json_response; from osint.config import settings; print\\('OK'\\)\")",
+      "Bash(python3 -c \"from osint.core import OsintResult, PivotEntity, AIRunner, AgentError, PromptBuilder, parse_json_response; print\\('OK'\\)\")",
+      "Bash(python3 -c \"from osint.agents import AGENT_REGISTRY; print\\('Registry keys:', list\\(AGENT_REGISTRY.keys\\(\\)\\)\\)\")",
+      "Bash(python3 << 'EOF'\nfrom osint.agents import AGENT_REGISTRY\nimport inspect\n\nfor agent_type, \\(run_func, ai_cli\\) in AGENT_REGISTRY.items\\(\\):\n    sig = inspect.signature\\(run_func\\)\n    print\\(f\"{agent_type:12} -> {ai_cli:8} \\(run signature: {sig}, asyncio: {inspect.iscoroutinefunction\\(run_func\\)}\\)\"\\)\nEOF)",
+      "Bash(python3 << 'EOF'\nfrom osint.agents import email, domain, phone, person, username, social, image, location\n\nagents = [email, domain, phone, person, username, social, image, location]\nfor agent in agents:\n    print\\(f\"{agent.AGENT_TYPE:12} -> {agent.AI_CLI}\"\\)\nEOF)"
     ]
   }
 }

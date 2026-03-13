@@ -59,14 +59,16 @@ class OSINTOrchestrator:
 
             # Run all items at this level concurrently
             tasks = []
-            for at, t, _ in level_items:
+            task_items = []
+            for at, t, depth in level_items:
                 if at in AGENT_REGISTRY:
                     run_fn, _ = AGENT_REGISTRY[at]
                     tasks.append(run_fn(t))
+                    task_items.append((at, t, depth))
 
             level_results = await asyncio.gather(*tasks, return_exceptions=True)
 
-            for item, result in zip(level_items, level_results):
+            for item, result in zip(task_items, level_results):  # use task_items, not level_items
                 at, t, depth = item
                 if isinstance(result, Exception):
                     # Create a failed OsintResult for exceptions from gather

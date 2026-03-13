@@ -1,7 +1,5 @@
 from rich.console import Console
 from rich.panel import Panel
-from rich.tree import Tree
-from rich.text import Text
 from osint.core.result import OsintResult
 
 console = Console()

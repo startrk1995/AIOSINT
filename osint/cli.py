@@ -127,12 +127,12 @@ def recon(
     should_json = output == "json"
     should_save = save is not None
 
-    if should_json or should_save:
-        json_output = json_formatter.format_results(results)
-        if should_json:
-            console.print(json_output)
-        if should_save:
-            json_formatter.save_results(results, save)
-            console.print(f"[green]Results saved to {save}[/green]")
-    else:
+    if output == "rich":
         rich_formatter.format_results(results)
+
+    if should_json:
+        console.print(json_formatter.format_results(results))
+
+    if should_save:
+        json_formatter.save_results(results, save)
+        console.print(f"[green]Results saved to {save}[/green]")

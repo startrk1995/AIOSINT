@@ -23,7 +23,7 @@ AI_INSTRUCTIONS: dict[str, str] = {
 # Pivot extraction hints keyed by agent type
 PIVOT_HINTS: dict[str, str] = {
     "email": 'Extract pivot entities of type "domain" (the email domain) and "username" (the local part or discovered usernames).',
-    "domain": 'Extract pivot entities of type "ip" for all discovered IP addresses.',
+    "domain": 'Extract pivot entities of type "domain" for all discovered IP addresses and related domains.',
     "username": 'Extract pivot entities of type "social" for each platform profile discovered.',
     "image": 'Extract pivot entities of type "location" for any GPS coordinates found in EXIF data.',
     "phone": 'Extract pivot entities of type "location" for the region or country identified.',

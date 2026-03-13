@@ -1,6 +1,7 @@
 """OSINT orchestrator — BFS pivot chaining engine."""
 import asyncio
 from collections import deque
+from datetime import datetime, timezone
 from osint.core import OsintResult
 from osint.agents import AGENT_REGISTRY
 
@@ -69,7 +70,6 @@ class OSINTOrchestrator:
                 at, t, depth = item
                 if isinstance(result, Exception):
                     # Create a failed OsintResult for exceptions from gather
-                    from datetime import datetime, timezone
                     results.append(OsintResult(
                         agent=at,
                         target=t,

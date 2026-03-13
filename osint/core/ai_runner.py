@@ -14,7 +14,7 @@ class AIRunner:
         return {
             "gemini": [settings.gemini_path, "-p"],
             "claude": [settings.claude_path, "-p"],
-            "codex": [settings.codex_path, "-q", "--json"],
+            "codex": [settings.codex_path, "exec", "--full-auto", "--skip-git-repo-check"],
         }
 
     async def run(self, ai: str, prompt: str) -> str:

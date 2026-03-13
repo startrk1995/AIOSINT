@@ -46,5 +46,8 @@ def save_results(results: list[OsintResult], filepath: str) -> None:
         filepath: Path where the JSON file should be written
     """
     json_string = format_results(results)
-    with open(filepath, 'w') as f:
-        f.write(json_string)
+    try:
+        with open(filepath, "w") as f:
+            f.write(json_string)
+    except OSError as e:
+        raise OSError(f"Failed to save results to {filepath}: {e}") from e

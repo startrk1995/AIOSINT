@@ -1,0 +1,18 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "osint"
+version = "0.1.0"
+requires-python = ">=3.11"
+dependencies = [
+    "typer[all]",
+    "httpx",
+    "pydantic[email]",
+    "pydantic-settings",
+    "rich",
+]
+
+[project.scripts]
+osint = "osint.cli:app"

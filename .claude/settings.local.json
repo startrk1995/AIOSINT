@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "allow": [
+      "WebSearch",
+      "Bash(git init:*)",
+      "Bash(pip install:*)",
+      "Bash(python -m pip install -e . --quiet 2>&1 | head -20)",
+      "Bash(python3 -m pip install -e . --quiet 2>&1 | head -30)",
+      "Bash(which pip3:*)",
+      "Bash(git add:*)"
+    ]
+  }
+}

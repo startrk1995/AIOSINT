@@ -1,5 +1,7 @@
 import asyncio
 
+from osint.config import settings
+
 
 class AgentError(Exception):
     pass
@@ -8,11 +10,12 @@ class AgentError(Exception):
 class AIRunner:
     """Dispatches prompts to AI CLI subprocesses (gemini, claude, codex)."""
 
-    COMMANDS: dict[str, list[str]] = {
-        "gemini": ["gemini", "-p"],
-        "claude": ["claude", "-p"],
-        "codex": ["codex", "-q", "--json"],
-    }
+    def _get_commands(self) -> dict[str, list[str]]:
+        return {
+            "gemini": [settings.gemini_path, "-p"],
+            "claude": [settings.claude_path, "-p"],
+            "codex": [settings.codex_path, "-q", "--json"],
+        }
 
     async def run(self, ai: str, prompt: str) -> str:
         """Run the given AI CLI with the prompt and return stdout as a string.
@@ -27,10 +30,11 @@ class AIRunner:
         Raises:
             AgentError: If the AI name is unsupported or the subprocess exits non-zero.
         """
-        if ai not in self.COMMANDS:
-            raise AgentError(f"Unsupported AI: {ai!r}. Must be one of {list(self.COMMANDS)}")
+        commands = self._get_commands()
+        if ai not in commands:
+            raise AgentError(f"Unsupported AI: {ai!r}. Must be one of {list(commands)}")
 
-        cmd = self.COMMANDS[ai] + [prompt]
+        cmd = commands[ai] + [prompt]
 
         process = await asyncio.create_subprocess_exec(
             *cmd,

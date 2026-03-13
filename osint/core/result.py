@@ -3,7 +3,7 @@ from typing import Any
 
 
 class PivotEntity(BaseModel):
-    agent_type: str   # "domain", "username", "email", etc.
+    type: str   # "domain", "username", "email", etc.
     value: str
 
 

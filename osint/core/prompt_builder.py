@@ -1,5 +1,4 @@
 import json
-import re
 
 
 # Research task descriptions keyed by agent type
@@ -86,32 +85,8 @@ class PromptBuilder:
 
 
 def parse_json_response(response: str) -> dict:
-    """Extract a JSON object from an AI response string.
-
-    Tries to find the first `{...}` block in the response. Falls back to a
-    safe default dict on any parse failure.
-
-    Args:
-        response: Raw string output from an AI CLI.
-
-    Returns:
-        Parsed dict, or ``{"found": False, "data": {}, "pivots": []}`` on failure.
-    """
-    _fallback: dict = {"found": False, "data": {}, "pivots": []}
-
-    # Find the first outermost {...} block using a greedy regex then validate
-    match = re.search(r"\{.*\}", response, re.DOTALL)
-    if not match:
-        return _fallback
-
-    candidate = match.group(0)
-    try:
-        return json.loads(candidate)
-    except json.JSONDecodeError:
-        pass
-
-    # The greedy match may have grabbed too much; try progressively shorter substrings
-    # by finding matching braces manually
+    """Extract first valid JSON object from response string."""
+    fallback: dict = {"found": False, "data": {}, "pivots": []}
     try:
         start = response.index("{")
         depth = 0
@@ -121,9 +96,7 @@ def parse_json_response(response: str) -> dict:
             elif ch == "}":
                 depth -= 1
                 if depth == 0:
-                    candidate = response[start : i + 1]
-                    return json.loads(candidate)
+                    return json.loads(response[start : i + 1])
     except (ValueError, json.JSONDecodeError):
         pass
-
-    return _fallback
+    return fallback

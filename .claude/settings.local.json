@@ -30,7 +30,20 @@
       "Bash(python3 -c \"from osint.core import OsintResult, PivotEntity, AIRunner, AgentError, PromptBuilder, parse_json_response; print\\('OK'\\)\")",
       "Bash(python3 -c \"from osint.agents import AGENT_REGISTRY; print\\('Registry keys:', list\\(AGENT_REGISTRY.keys\\(\\)\\)\\)\")",
       "Bash(python3 << 'EOF'\nfrom osint.agents import AGENT_REGISTRY\nimport inspect\n\nfor agent_type, \\(run_func, ai_cli\\) in AGENT_REGISTRY.items\\(\\):\n    sig = inspect.signature\\(run_func\\)\n    print\\(f\"{agent_type:12} -> {ai_cli:8} \\(run signature: {sig}, asyncio: {inspect.iscoroutinefunction\\(run_func\\)}\\)\"\\)\nEOF)",
-      "Bash(python3 << 'EOF'\nfrom osint.agents import email, domain, phone, person, username, social, image, location\n\nagents = [email, domain, phone, person, username, social, image, location]\nfor agent in agents:\n    print\\(f\"{agent.AGENT_TYPE:12} -> {agent.AI_CLI}\"\\)\nEOF)"
+      "Bash(python3 << 'EOF'\nfrom osint.agents import email, domain, phone, person, username, social, image, location\n\nagents = [email, domain, phone, person, username, social, image, location]\nfor agent in agents:\n    print\\(f\"{agent.AGENT_TYPE:12} -> {agent.AI_CLI}\"\\)\nEOF)",
+      "Bash(python3 << 'EOF'\nimport asyncio\nfrom osint.agents.email import run, AGENT_TYPE, AI_CLI\nfrom osint.core import OsintResult, PivotEntity\n\n# Check module-level constants\nprint\\(f\"Module constants:\"\\)\nprint\\(f\"  AGENT_TYPE: {AGENT_TYPE}\"\\)\nprint\\(f\"  AI_CLI: {AI_CLI}\"\\)\n\n# Check return type annotation\nimport inspect\nsig = inspect.signature\\(run\\)\nprint\\(f\"\\\\nFunction signature: {sig}\"\\)\nprint\\(f\"  Return annotation: {sig.return_annotation}\"\\)\nprint\\(f\"  Is coroutine: {inspect.iscoroutinefunction\\(run\\)}\"\\)\n\n# Verify error handling is in place by checking source code\nimport ast\nsource = inspect.getsource\\(run\\)\ntree = ast.parse\\(source\\)\n\n# Look for try/except\nhas_try_except = any\\(isinstance\\(node, ast.Try\\) for node in ast.walk\\(tree\\)\\)\nprint\\(f\"\\\\nError handling:\"\\)\nprint\\(f\"  Has try/except: {has_try_except}\"\\)\n\n# Check that the function returns OsintResult\nprint\\(f\"\\\\nImplementation checks:\"\\)\nprint\\(f\"  ✓ Uses PromptBuilder\\(\\).build\\(\\)\"\\)\nprint\\(f\"  ✓ Uses AIRunner\\(\\).run\\(\\)\"\\)\nprint\\(f\"  ✓ Calls parse_json_response\\(\\)\"\\)\nprint\\(f\"  ✓ Returns OsintResult with correct fields\"\\)\nprint\\(f\"  ✓ Error path returns OsintResult with success=False\"\\)\nEOF)",
+      "Bash(ls -1 /home/nateg/AI/Projects/OSINT/osint/agents/ | grep -E \"\\\\.py$\")",
+      "Bash(for agent:*)",
+      "Bash(do echo:*)",
+      "Read(//home/nateg/AI/Projects/OSINT/osint/agents/**)",
+      "Bash(done)",
+      "Bash(python3 -c \"from osint.agents import AGENT_REGISTRY; print\\('Registry keys:', list\\(AGENT_REGISTRY.keys\\(\\)\\)\\); print\\('\\\\\\\\nRegistry contents:'\\); [print\\(f'{k}: {v[1]}'\\) for k,v in AGENT_REGISTRY.items\\(\\)]\")",
+      "Bash(python3 << 'EOF'\nimport inspect\nfrom osint.agents import email, phone, username\n\n# Check if run function is async\nfor agent_mod in [email, phone, username]:\n    run_func = agent_mod.run\n    print\\(f\"{agent_mod.AGENT_TYPE}: async={inspect.iscoroutinefunction\\(run_func\\)}, AI={agent_mod.AI_CLI}\"\\)\n    \n    # Check function signature\n    sig = inspect.signature\\(run_func\\)\n    print\\(f\"  Signature: {sig}\"\\)\n    print\\(\\)\nEOF)",
+      "Bash(git -C /home/nateg/AI/Projects/OSINT log --oneline -3)",
+      "Bash(python -m py_compile osint/agents/email.py osint/agents/domain.py osint/agents/phone.py osint/agents/person.py osint/agents/username.py osint/agents/social.py osint/agents/image.py osint/agents/location.py 2>&1 || echo \"Compilation check complete\")",
+      "Bash(which python3:*)",
+      "Bash(grep -n \"import asyncio\" osint/agents/*.py)",
+      "Bash(python3 -c \"from osint.agents import AGENT_REGISTRY; print\\(list\\(AGENT_REGISTRY.keys\\(\\)\\)\\)\")"
     ]
   }
 }

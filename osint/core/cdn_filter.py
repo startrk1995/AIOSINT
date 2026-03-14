@@ -3,7 +3,12 @@ import ipaddress
 from functools import lru_cache
 
 # Known CDN/shared-infrastructure CIDR ranges to exclude from IP pivots.
-# Sources: Cloudflare published ranges, Fastly, Akamai, AWS CloudFront.
+# These ranges are periodically updated by each provider — refresh from:
+#   Cloudflare: https://www.cloudflare.com/ips-v4 / https://www.cloudflare.com/ips-v6
+#   AWS CloudFront: https://ip-ranges.amazonaws.com/ip-ranges.json (service: CLOUDFRONT)
+#   Fastly: https://api.fastly.com/public-ip-list
+#   Akamai: https://techdocs.akamai.com/property-mgr/docs/origin-ip-allow-listing
+# Note: Akamai and AWS CloudFront ranges below are representative, not exhaustive.
 _CDN_NETWORKS = [
     # Cloudflare
     "103.21.244.0/22", "103.22.200.0/22", "103.31.4.0/22",

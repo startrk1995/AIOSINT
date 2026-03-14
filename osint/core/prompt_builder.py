@@ -31,7 +31,10 @@ PIVOT_HINTS: dict[str, str] = {
     "person": 'Extract pivot entities of type "email" and "username" for all discovered addresses and handles.',
     "social": 'Extract pivot entities of type "username" for all associated usernames found.',
     "location": "",  # no specific pivot hint
-    "ip": "",  # IP is a research endpoint — no further pivots (primary only)
+    # IP is a research endpoint — no further pivots (primary only, no cascading).
+    # CDN IPs are also filtered at the orchestrator level (cdn_filter.is_cdn_ip) as a
+    # second defense layer; the AI hint above is best-effort, not the sole filter.
+    "ip": "",
 }
 
 # JSON schema example shown in the prompt

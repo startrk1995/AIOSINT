@@ -155,6 +155,15 @@ def social(
 
 
 @app.command()
+def ip(
+    target: str = typer.Argument(..., help="IP address to investigate"),
+    verbose: bool = typer.Option(False, "--verbose", "-v", help="Show prompts and raw AI responses"),
+):
+    """Investigate an IP address using Gemini."""
+    _run_agent("ip", target, verbose=verbose)
+
+
+@app.command()
 def recon(
     target: str = typer.Argument(..., help="Starting target (email, domain, etc.)"),
     agent: str = typer.Option("email", help=f"Starting agent type. Choices: {', '.join(sorted(AGENT_REGISTRY.keys()))}"),

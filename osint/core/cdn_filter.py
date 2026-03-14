@@ -44,6 +44,49 @@ def _get_networks() -> tuple:
     return tuple(ipaddress.ip_network(cidr, strict=False) for cidr in _CDN_NETWORKS)
 
 
+# Free/popular email provider domains — researching these produces no OSINT signal.
+# Domains extracted from @gmail.com, @yahoo.com etc. are noise, not targets.
+_POPULAR_DOMAINS: frozenset[str] = frozenset({
+    # Google
+    "gmail.com", "googlemail.com",
+    # Microsoft
+    "hotmail.com", "hotmail.co.uk", "hotmail.fr", "hotmail.de", "hotmail.es",
+    "hotmail.it", "hotmail.nl", "hotmail.se", "hotmail.no", "hotmail.dk",
+    "outlook.com", "outlook.fr", "outlook.de", "outlook.es", "outlook.it",
+    "live.com", "live.co.uk", "live.fr", "live.de", "msn.com",
+    # Yahoo
+    "yahoo.com", "yahoo.co.uk", "yahoo.co.in", "yahoo.fr", "yahoo.de",
+    "yahoo.es", "yahoo.it", "yahoo.ca", "yahoo.com.au", "yahoo.com.br",
+    "ymail.com",
+    # Apple
+    "icloud.com", "me.com", "mac.com",
+    # AOL / Verizon Media
+    "aol.com", "aim.com",
+    # Privacy-focused
+    "protonmail.com", "proton.me", "pm.me",
+    # Other popular providers
+    "fastmail.com", "fastmail.fm",
+    "zoho.com",
+    "yandex.com", "yandex.ru",
+    "gmx.com", "gmx.de", "gmx.net", "gmx.at", "gmx.ch",
+    "web.de", "t-online.de",
+    "mail.com",
+    "inbox.com",
+})
+
+
+def is_popular_domain(domain: str) -> bool:
+    """Return True if domain is a well-known free email provider with no OSINT value.
+
+    Args:
+        domain: Domain name string (e.g. "gmail.com").
+
+    Returns:
+        True if domain is a popular/free email provider to skip as a pivot target.
+    """
+    return domain.lower() in _POPULAR_DOMAINS
+
+
 def is_cdn_ip(ip: str) -> bool:
     """Return True if ip falls within a known CDN/shared-infrastructure range.
 

@@ -45,6 +45,7 @@ class AIRunner:
 
         process = await asyncio.create_subprocess_exec(
             *cmd,
+            stdin=asyncio.subprocess.DEVNULL,  # prevent blocking when multiple instances share terminal
             stdout=asyncio.subprocess.PIPE,
             stderr=asyncio.subprocess.PIPE,
         )
@@ -61,7 +62,9 @@ class AIRunner:
                 process.kill()
             except ProcessLookupError:
                 pass  # process already exited before we could kill it
-            await process.communicate()  # reap zombie — must not be omitted
+            # Use wait() not communicate() — communicate() drains pipes, which blocks
+            # forever if child processes inherited the pipe (e.g. Gemini web workers).
+            await process.wait()
             raise AgentError(f"TIMEOUT after {timeout}s")
 
         if process.returncode != 0:

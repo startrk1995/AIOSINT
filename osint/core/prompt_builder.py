@@ -23,7 +23,7 @@ AI_INSTRUCTIONS: dict[str, str] = {
 
 # Pivot extraction hints keyed by agent type
 PIVOT_HINTS: dict[str, str] = {
-    "email": 'Extract pivot entities of type "domain" (the email domain) and "username" (the local part or discovered usernames).',
+    "email": 'Extract pivot entities of type "domain" for the email domain only if it is a private/organizational domain (skip free providers like gmail.com, yahoo.com, hotmail.com, outlook.com, icloud.com, protonmail.com). Extract pivot entities of type "username" for the local part and any discovered usernames.',
     "domain": 'Extract pivot entities of type "ip" for dedicated server IP addresses found in DNS A/MX records (exclude CDN/shared-infrastructure IPs like Cloudflare, Fastly, Akamai, AWS CloudFront). Also extract pivot entities of type "domain" for related subdomains and associated domains.',
     "username": 'Extract pivot entities of type "social" for each platform profile discovered.',
     "image": 'Extract pivot entities of type "location" for any GPS coordinates found in EXIF data.',

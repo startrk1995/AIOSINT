@@ -18,20 +18,15 @@ def mock_process_fast():
 @pytest.fixture
 def mock_process_slow():
     """Subprocess that hangs forever."""
-    call_n = 0
-
     async def communicate_se(*args, **kwargs):
-        nonlocal call_n
-        call_n += 1
-        if call_n == 1:
-            await asyncio.sleep(999)
+        await asyncio.sleep(999)
         return b"", b""
 
     proc = MagicMock()
     proc.returncode = 0
     proc.kill = MagicMock()
-    # First call hangs, second call (reap after kill) returns immediately
     proc.communicate = AsyncMock(side_effect=communicate_se)
+    proc.wait = AsyncMock(return_value=None)  # reap via wait(), not communicate()
     return proc
 
 
@@ -49,8 +44,9 @@ async def test_timeout_kill_raises_agent_error(mock_process_slow):
         with pytest.raises(AgentError, match="TIMEOUT"):
             await runner.run("gemini", "test prompt", context=ctx)
     mock_process_slow.kill.assert_called_once()
-    # Reap step must be called — "must not be omitted" per spec
-    assert mock_process_slow.communicate.call_count == 2
+    # Reap via wait() — communicate() called only once (the initial hanging call)
+    assert mock_process_slow.communicate.call_count == 1
+    mock_process_slow.wait.assert_called_once()
 
 
 async def test_timeout_warn_also_kills_process(mock_process_slow):
@@ -61,8 +57,8 @@ async def test_timeout_warn_also_kills_process(mock_process_slow):
         with pytest.raises(AgentError, match="TIMEOUT"):
             await runner.run("gemini", "test prompt", context=ctx)
     mock_process_slow.kill.assert_called_once()
-    # Reap step must be called — "must not be omitted" per spec
-    assert mock_process_slow.communicate.call_count == 2
+    assert mock_process_slow.communicate.call_count == 1
+    mock_process_slow.wait.assert_called_once()
 
 
 async def test_unsupported_ai_raises():

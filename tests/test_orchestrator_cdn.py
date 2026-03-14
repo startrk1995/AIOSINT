@@ -1,4 +1,4 @@
-"""Tests for CDN IP filtering in the orchestrator BFS pivot queue."""
+"""Tests for CDN IP and popular-domain filtering in the orchestrator BFS pivot queue."""
 import asyncio
 from unittest.mock import AsyncMock, patch
 from datetime import datetime, timezone
@@ -107,3 +107,55 @@ async def test_orchestrator_non_ip_pivots_not_affected_by_cdn_filter():
 
     email_mock.assert_called_once()
     assert any(r.agent == "email" for r in results)
+
+
+@pytest.mark.asyncio
+async def test_orchestrator_filters_popular_domain_from_pivots():
+    """gmail.com and similar free-provider domains must be skipped as pivot targets."""
+    email_result = _make_result(
+        agent="email",
+        target="foo@gmail.com",
+        pivots=[
+            PivotEntity(type="domain", value="gmail.com"),  # popular — must be filtered
+            PivotEntity(type="username", value="foo"),       # should pass through
+        ],
+    )
+
+    domain_mock = AsyncMock(return_value=_make_result("domain", "gmail.com", pivots=[]))
+    username_mock = AsyncMock(return_value=_make_result("username", "foo", pivots=[]))
+
+    fake_registry = {
+        "email": (AsyncMock(return_value=email_result), "gemini"),
+        "domain": (domain_mock, "gemini"),
+        "username": (username_mock, "codex"),
+    }
+
+    orchestrator = OSINTOrchestrator()
+    with patch("osint.orchestrator.AGENT_REGISTRY", fake_registry):
+        results = await orchestrator.run("foo@gmail.com", "email", max_depth=2)
+
+    domain_mock.assert_not_called()  # gmail.com filtered out
+    username_mock.assert_called_once()  # username pivot passes through
+
+
+@pytest.mark.asyncio
+async def test_orchestrator_allows_private_domain_pivots():
+    """Non-popular organizational domains must not be filtered."""
+    email_result = _make_result(
+        agent="email",
+        target="foo@acme-corp.com",
+        pivots=[PivotEntity(type="domain", value="acme-corp.com")],
+    )
+
+    domain_mock = AsyncMock(return_value=_make_result("domain", "acme-corp.com", pivots=[]))
+
+    fake_registry = {
+        "email": (AsyncMock(return_value=email_result), "gemini"),
+        "domain": (domain_mock, "gemini"),
+    }
+
+    orchestrator = OSINTOrchestrator()
+    with patch("osint.orchestrator.AGENT_REGISTRY", fake_registry):
+        await orchestrator.run("foo@acme-corp.com", "email", max_depth=2)
+
+    domain_mock.assert_called_once()

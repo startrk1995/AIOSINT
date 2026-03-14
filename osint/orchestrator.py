@@ -8,7 +8,7 @@ from rich.live import Live
 from rich.progress import Progress, SpinnerColumn, TextColumn, TimeElapsedColumn
 
 from osint.core import OsintResult
-from osint.core.cdn_filter import is_cdn_ip
+from osint.core.cdn_filter import is_cdn_ip, is_popular_domain
 from osint.core.run_context import RunContext
 from osint.agents import AGENT_REGISTRY
 
@@ -126,6 +126,8 @@ class OSINTOrchestrator:
                         for pivot in result.pivots:
                             if pivot.type == "ip" and is_cdn_ip(pivot.value):
                                 continue  # skip CDN/shared-infra IPs
+                            if pivot.type == "domain" and is_popular_domain(pivot.value):
+                                continue  # skip free email providers (gmail, yahoo, etc.)
                             if (pivot.type, pivot.value) not in visited:
                                 queue.append((pivot.type, pivot.value, depth + 1))
 

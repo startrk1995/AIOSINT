@@ -73,6 +73,18 @@ osint/
 - **IP agent is primary-only** — `PIVOT_HINTS["ip"] = ""` so the AI returns no further pivots from IP lookups; prevents cascading
 - **Orchestrator BFS** uses `task_items` (not `level_items`) in the zip — prevents misalignment when unknown pivot types are filtered out
 
+## Testing
+
+```bash
+pip install -e ".[dev]"
+pytest                          # all tests
+pytest tests/test_cli_ip.py     # single test file
+pytest -x                       # stop on first failure
+pytest -s                       # show subprocess stdout (useful for AI runner tests)
+```
+
+Tests use `pytest-asyncio` with `asyncio_mode = "auto"` — no `@pytest.mark.asyncio` needed.
+
 ## CLI Usage
 
 ```bash

@@ -1,4 +1,6 @@
 import asyncio
+import os
+import signal
 
 from osint.config import settings
 from osint.core.run_context import RunContext
@@ -15,7 +17,7 @@ class AIRunner:
         return {
             "gemini": [settings.gemini_path, "-p"],
             "claude": [settings.claude_path, "-p"],
-            "codex": [settings.codex_path, "exec", "--full-auto", "--skip-git-repo-check"],
+            "codex": [settings.codex_path, "exec", "--dangerously-bypass-approvals-and-sandbox", "--skip-git-repo-check"],
         }
 
     async def run(self, ai: str, prompt: str, context: RunContext | None = None) -> str:
@@ -48,6 +50,7 @@ class AIRunner:
             stdin=asyncio.subprocess.DEVNULL,  # prevent blocking when multiple instances share terminal
             stdout=asyncio.subprocess.PIPE,
             stderr=asyncio.subprocess.PIPE,
+            start_new_session=True,  # own process group so killpg reaps all children
         )
 
         try:
@@ -59,11 +62,9 @@ class AIRunner:
                 stdout, stderr = await process.communicate()
         except asyncio.TimeoutError:
             try:
-                process.kill()
-            except ProcessLookupError:
-                pass  # process already exited before we could kill it
-            # Use wait() not communicate() — communicate() drains pipes, which blocks
-            # forever if child processes inherited the pipe (e.g. Gemini web workers).
+                os.killpg(os.getpgid(process.pid), signal.SIGKILL)
+            except (ProcessLookupError, OSError):
+                pass  # process group already gone
             await process.wait()
             raise AgentError(f"TIMEOUT after {timeout}s")
 

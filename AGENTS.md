@@ -1,68 +1,98 @@
-# AGENTS.md
+# CLAUDE.md
 
-Guidance for AI coding agents (Codex, OpenAI o-series, etc.) working in this repository.
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
 ## Project Overview
 
-Python OSINT meta-framework. Each of the 8 research agents delegates to a specific AI CLI subprocess (Gemini, Claude, or Codex). A BFS orchestrator chains agents by extracting pivot entities from results.
+Python-based OSINT meta-framework where each agent delegates research to a specific AI CLI tool (Gemini, Claude, or Codex) via subprocess. The orchestrator chains agents together using pivots extracted from AI responses.
+
+No direct API calls to external services — the AI CLIs handle all research via their native capabilities (Gemini web search, Codex code execution, Claude reasoning).
 
 ## Setup
 
 ```bash
 pip install -e .
+cp .env.example .env   # set CLI binary paths if not in PATH
 ```
 
-## Repository Structure
+Requires AI CLI binaries installed and available in PATH:
+- `gemini` — Google Gemini CLI
+- `claude` — Claude Code CLI
+- `codex` — OpenAI Codex CLI
+
+## Architecture
 
 ```
 osint/
-├── cli.py              # Entry point: Typer CLI, `osint` command
-├── config.py           # Settings (binary paths), reads from .env
-├── orchestrator.py     # BFS pivot chaining engine
+├── cli.py                   # Typer CLI entry point (osint command)
+├── config.py                # pydantic-settings: CLI binary paths
+├── orchestrator.py          # BFS pivot engine
 ├── core/
-│   ├── result.py       # OsintResult, PivotEntity (Pydantic models)
-│   ├── ai_runner.py    # AIRunner: async subprocess dispatch
-│   └── prompt_builder.py  # PromptBuilder + parse_json_response
+│   ├── result.py            # OsintResult + PivotEntity Pydantic models
+│   ├── ai_runner.py         # async subprocess wrapper (gemini/claude/codex)
+│   └── prompt_builder.py    # per-agent JSON-schema prompts + parse_json_response
 ├── agents/
-│   ├── base.py         # make_run_fn(agent_type, ai_cli) factory
-│   ├── __init__.py     # AGENT_REGISTRY
-│   └── *.py            # 8 agent files (6 lines each)
+│   ├── base.py              # make_run_fn factory (shared agent logic)
+│   ├── __init__.py          # AGENT_REGISTRY + AI assignment map
+│   ├── email.py             # → Gemini
+│   ├── domain.py            # → Gemini
+│   ├── phone.py             # → Claude
+│   ├── person.py            # → Claude
+│   ├── username.py          # → Codex
+│   ├── social.py            # → Codex
+│   ├── image.py             # → Codex
+│   └── location.py          # → Codex
 └── output/
-    ├── rich_formatter.py
-    └── json_formatter.py
+    ├── rich_formatter.py    # color-coded Rich panels
+    └── json_formatter.py    # JSON serializer
 ```
 
-## Critical Implementation Details
+## AI Assignment by Agent
 
-### PivotEntity field name
-`PivotEntity.type` (not `agent_type`). This matches the JSON schema returned by AI CLIs.
+| Agent | AI CLI | Rationale |
+|-------|--------|-----------|
+| email | Gemini | Google-indexed breach data, web search |
+| domain | Gemini | WHOIS, DNS, Google-indexed domain intel |
+| phone | Claude | Structured reasoning over carrier/region/validation |
+| person | Claude | Connects public records via reasoning |
+| username | Codex | Writes + runs Python to check platforms |
+| social | Codex | Scripts cross-platform profile lookups |
+| image | Codex | Executes EXIF parsing, reverse search scripts |
+| location | Codex | Scripts geocoding / address reverse lookup |
 
-### Agent factory pattern
-All agents use `make_run_fn` from `agents/base.py`. Do not duplicate the run logic.
+## Key Design Decisions
 
-### Orchestrator zip alignment
-The orchestrator uses `task_items` (parallel to `tasks`) in `zip(task_items, level_results)`, not `level_items`. This prevents result misalignment when unknown pivot types are filtered out.
+- **PivotEntity.type** (not `agent_type`) — matches the JSON schema the AI returns
+- **AIRunner** reads binary paths from `settings` (not hardcoded) — configure via `.env`
+- **parse_json_response** uses brace-depth scanning (not greedy regex) — handles AI prose around JSON
+- **make_run_fn factory** (`agents/base.py`) — all 8 agent files are 6-line wrappers around this
+- **Orchestrator BFS** uses `task_items` (not `level_items`) in the zip — prevents misalignment when unknown pivot types are filtered out
 
-### JSON parsing
-`parse_json_response` uses brace-depth scanning. Do not replace with regex — it handles `}` inside string values correctly.
+## CLI Usage
 
-### Config
-Binary paths are read from `settings` at runtime. `AIRunner._get_commands()` calls `settings.gemini_path` etc. Do not hardcode binary names.
-
-## Common Tasks
-
-### Add a new agent
-1. `osint/agents/newagent.py` — 6 lines using `make_run_fn`
-2. Add entry to `AGENT_REGISTRY` in `osint/agents/__init__.py`
-3. Add `RESEARCH_TASKS["newagent"]`, `PIVOT_HINTS["newagent"]` in `osint/core/prompt_builder.py`
-
-### Run the CLI
 ```bash
-osint email test@example.com
-osint recon test@example.com --depth 2
+# Single-agent commands
+osint email foo@bar.com
+osint phone "+1-555-0100"
+osint domain example.com
+osint username johndoe
+osint name "John Doe"
+osint location "123 Main St, New York"
+osint image /path/to/photo.jpg
+osint social johndoe
+
+# Full auto-pivot recon
+osint recon foo@bar.com --depth 2 --output json --save results.json
 ```
 
-### Test imports
-```bash
-python3 -c "from osint.agents import AGENT_REGISTRY; from osint.orchestrator import OSINTOrchestrator; print('OK')"
-```
+## Adding a New Agent
+
+1. Create `osint/agents/myagent.py`:
+   ```python
+   from osint.agents.base import make_run_fn
+   AGENT_TYPE = "myagent"
+   AI_CLI = "gemini"  # or "claude" / "codex"
+   run = make_run_fn(AGENT_TYPE, AI_CLI)
+   ```
+2. Add to `AGENT_REGISTRY` in `osint/agents/__init__.py`
+3. Add a `RESEARCH_TASKS` and `PIVOT_HINTS` entry in `osint/core/prompt_builder.py`

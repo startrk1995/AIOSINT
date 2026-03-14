@@ -16,7 +16,7 @@ RESEARCH_TASKS: dict[str, str] = {
 
 # AI-specific instruction preambles
 AI_INSTRUCTIONS: dict[str, str] = {
-    "gemini": "Use your web search to look up",
+    "gemini": "Use your web search to look up ONLY the exact target value specified. Report ONLY information directly found in search results for this specific target. Do NOT infer, assume, or include information about other people or entities not directly associated with the exact target. If you cannot find direct evidence, set found=false and return empty data. Look up",
     "claude": "Analyze the following and reason through",
     "codex": "Write and execute Python code to",
 }

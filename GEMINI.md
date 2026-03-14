@@ -1,35 +1,98 @@
-# OSINT Project Overview
+# CLAUDE.md
 
-This workspace is dedicated to **Open Source Intelligence (OSINT)** research and investigations. It is designed to leverage AI-driven research agents, specifically utilizing the Gemini CLI for automated information gathering and analysis.
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-## Core Agent: gemini-research
+## Project Overview
 
-The project includes a specialized agent configuration located at `.claude/agents/gemini-research.md`.
+Python-based OSINT meta-framework where each agent delegates research to a specific AI CLI tool (Gemini, Claude, or Codex) via subprocess. The orchestrator chains agents together using pivots extracted from AI responses.
 
-### Purpose
-The `gemini-research` agent is a specialist designed to:
-- Gather accurate, current information from the web.
-- Formulate precise search queries.
-- Synthesize findings into actionable insights.
-- Build persistent memory of research tasks and user preferences.
+No direct API calls to external services — the AI CLIs handle all research via their native capabilities (Gemini web search, Codex code execution, Claude reasoning).
 
-### Workflow
-1.  **Analyze**: Understand the research task.
-2.  **Formulate**: Create targeted search queries.
-3.  **Execute**: Run searches using the command:
-    ```bash
-    gemini -p "your search query"
-    ```
-4.  **Synthesize**: Summarize findings with citations.
+## Setup
 
-## Directory Structure
+```bash
+pip install -e .
+cp .env.example .env   # set CLI binary paths if not in PATH
+```
 
-- **`.claude/agents/`**: Contains the definition and instructions for the `gemini-research` agent.
-- **`.claude/agent-memory/gemini-research/`**: Stores persistent memory for the research agent, including user preferences, feedback, and project context.
-- **`GEMINI.md`**: (This file) Provides instructional context for interactions within this workspace.
+Requires AI CLI binaries installed and available in PATH:
+- `gemini` — Google Gemini CLI
+- `claude` — Claude Code CLI
+- `codex` — OpenAI Codex CLI
 
-## Usage Guidelines
+## Architecture
 
-- **Research Tasks**: When starting a new OSINT investigation, engage the `gemini-research` agent.
-- **Persistence**: Encourage the agent to save important findings to its memory at `.claude/agent-memory/gemini-research/` to maintain context across sessions.
-- **Search Precision**: Use specific, keyword-rich queries for better results from the Gemini CLI.
+```
+osint/
+├── cli.py                   # Typer CLI entry point (osint command)
+├── config.py                # pydantic-settings: CLI binary paths
+├── orchestrator.py          # BFS pivot engine
+├── core/
+│   ├── result.py            # OsintResult + PivotEntity Pydantic models
+│   ├── ai_runner.py         # async subprocess wrapper (gemini/claude/codex)
+│   └── prompt_builder.py    # per-agent JSON-schema prompts + parse_json_response
+├── agents/
+│   ├── base.py              # make_run_fn factory (shared agent logic)
+│   ├── __init__.py          # AGENT_REGISTRY + AI assignment map
+│   ├── email.py             # → Gemini
+│   ├── domain.py            # → Gemini
+│   ├── phone.py             # → Claude
+│   ├── person.py            # → Claude
+│   ├── username.py          # → Codex
+│   ├── social.py            # → Codex
+│   ├── image.py             # → Codex
+│   └── location.py          # → Codex
+└── output/
+    ├── rich_formatter.py    # color-coded Rich panels
+    └── json_formatter.py    # JSON serializer
+```
+
+## AI Assignment by Agent
+
+| Agent | AI CLI | Rationale |
+|-------|--------|-----------|
+| email | Gemini | Google-indexed breach data, web search |
+| domain | Gemini | WHOIS, DNS, Google-indexed domain intel |
+| phone | Claude | Structured reasoning over carrier/region/validation |
+| person | Claude | Connects public records via reasoning |
+| username | Codex | Writes + runs Python to check platforms |
+| social | Codex | Scripts cross-platform profile lookups |
+| image | Codex | Executes EXIF parsing, reverse search scripts |
+| location | Codex | Scripts geocoding / address reverse lookup |
+
+## Key Design Decisions
+
+- **PivotEntity.type** (not `agent_type`) — matches the JSON schema the AI returns
+- **AIRunner** reads binary paths from `settings` (not hardcoded) — configure via `.env`
+- **parse_json_response** uses brace-depth scanning (not greedy regex) — handles AI prose around JSON
+- **make_run_fn factory** (`agents/base.py`) — all 8 agent files are 6-line wrappers around this
+- **Orchestrator BFS** uses `task_items` (not `level_items`) in the zip — prevents misalignment when unknown pivot types are filtered out
+
+## CLI Usage
+
+```bash
+# Single-agent commands
+osint email foo@bar.com
+osint phone "+1-555-0100"
+osint domain example.com
+osint username johndoe
+osint name "John Doe"
+osint location "123 Main St, New York"
+osint image /path/to/photo.jpg
+osint social johndoe
+
+# Full auto-pivot recon
+osint recon foo@bar.com --depth 2 --output json --save results.json
+```
+
+## Adding a New Agent
+
+1. Create `osint/agents/myagent.py`:
+   ```python
+   from osint.agents.base import make_run_fn
+   AGENT_TYPE = "myagent"
+   AI_CLI = "gemini"  # or "claude" / "codex"
+   run = make_run_fn(AGENT_TYPE, AI_CLI)
+   ```
+2. Add to `AGENT_REGISTRY` in `osint/agents/__init__.py`
+3. Add a `RESEARCH_TASKS` and `PIVOT_HINTS` entry in `osint/core/prompt_builder.py`

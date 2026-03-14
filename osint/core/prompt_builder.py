@@ -11,6 +11,7 @@ RESEARCH_TASKS: dict[str, str] = {
     "social": "Find cross-platform presence, follower counts, bio info for target social handle",
     "image": "Extract EXIF data, identify GPS coordinates, suggest reverse image search for target image path",
     "location": "Geocode, find nearby landmarks, reverse-lookup address details for target location",
+    "ip": "Find geolocation, ASN/ISP, reverse DNS, reputation, blacklists, open ports history, and hosting provider for target IP address",
 }
 
 # AI-specific instruction preambles
@@ -23,13 +24,14 @@ AI_INSTRUCTIONS: dict[str, str] = {
 # Pivot extraction hints keyed by agent type
 PIVOT_HINTS: dict[str, str] = {
     "email": 'Extract pivot entities of type "domain" (the email domain) and "username" (the local part or discovered usernames).',
-    "domain": 'Extract pivot entities of type "domain" for all discovered IP addresses and related domains.',
+    "domain": 'Extract pivot entities of type "ip" for dedicated server IP addresses found in DNS A/MX records (exclude CDN/shared-infrastructure IPs like Cloudflare, Fastly, Akamai, AWS CloudFront). Also extract pivot entities of type "domain" for related subdomains and associated domains.',
     "username": 'Extract pivot entities of type "social" for each platform profile discovered.',
     "image": 'Extract pivot entities of type "location" for any GPS coordinates found in EXIF data.',
     "phone": 'Extract pivot entities of type "location" for the region or country identified.',
     "person": 'Extract pivot entities of type "email" and "username" for all discovered addresses and handles.',
     "social": 'Extract pivot entities of type "username" for all associated usernames found.',
     "location": "",  # no specific pivot hint
+    "ip": "",  # IP is a research endpoint — no further pivots (primary only)
 }
 
 # JSON schema example shown in the prompt
